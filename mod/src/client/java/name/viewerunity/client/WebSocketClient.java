@@ -13,6 +13,9 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+
 public class WebSocketClient implements WebSocket.Listener {
     public static final String MOD_ID = "viewerunity";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
@@ -45,7 +48,16 @@ public class WebSocketClient implements WebSocket.Listener {
         Message msg;
         try {
             msg = mapper.readValue(json, Message.class);
-            LOGGER.info("WebSocket client recived: " + msg.test() + " field");
+            LOGGER.info("WebSocket client recived: " + msg.type() + " field");
+            LOGGER.info("WebSocket client recived: " + msg.user() + " field");
+            LOGGER.info("WebSocket client recived: " + msg.content() + " field");
+
+            if(msg.type().contains("chat")) {
+                LOGGER.info("INNNN!!!!");
+                Minecraft.getInstance().execute(() -> {
+                    ChatMessager.send(msg.user(), msg.content(), ChatFormatting.BLUE);
+                });
+            }
         } catch (JsonProcessingException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

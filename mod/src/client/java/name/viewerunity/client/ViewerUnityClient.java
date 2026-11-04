@@ -27,8 +27,8 @@ public class ViewerUnityClient implements ClientModInitializer {
 	}
 
 	private void renderAndDrawWaypoint(LevelRenderContext context) {
-		Minecraft.getInstance().gui.setScreen(
-  			new CustomScreen(Component.empty())
-		);
+		// Minecraft.getInstance().gui.setScreen(
+  		// 	new CustomScreen(Component.empty())
+		// );
 	}
 }
