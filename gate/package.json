@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
@@ -8,5 +9,8 @@
     "@types/node": "^26.6.6",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "tiktok-live-connector": "^2.5.0"
   }
 }
