@@ -21,6 +21,9 @@ public class ViewerUnityClient implements ClientModInitializer {
 		// LevelExtractionEvents.END_EXTRACTION.register(this::extractWaypoint);
 		LevelRenderEvents.AFTER_TRANSLUCENT_TERRAIN.register(this::renderAndDrawWaypoint);
 
+		WebSocketClient wsc = new WebSocketClient();
+		wsc.connect("ws://localhost:8080");
+
 	}
 
 	private void renderAndDrawWaypoint(LevelRenderContext context) {

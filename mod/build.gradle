@@ -36,6 +36,8 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	implementation "com.fasterxml.jackson.core:jackson-databind:2.20.0"
 }
 
 processResources {
