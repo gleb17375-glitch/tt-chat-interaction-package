@@ -10,4 +10,8 @@ socket.on("open", () => {
     }))
 });
 
-socket.on("message", console.log)
+socket.on("message", (data) => {
+    const text = data.toString();
+    const json = JSON.parse(text);
+    console.log(json);
+})

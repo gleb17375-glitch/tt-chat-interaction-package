@@ -1,16 +1,22 @@
 import { WebSocketServer } from "ws";
 
-const PORT = Number(process.env.PORT)
+const SERVER_PORT = Number(process.env.SERVER_PORT)
 
-if (!PORT) process.exit();
+if (!SERVER_PORT) process.exit();
 
-const wss = new WebSocketServer({port: PORT});
+const wss = new WebSocketServer({port: SERVER_PORT});
 
 wss.on("connection", (socket) => {
     console.log("client connected");
 
     socket.on("message", (data) => {
-        console.log("server recived: ", data.toString());
+        // console.log("server recived: ", data.toString());
+
+        for (const client of wss.clients) {
+            if (client.readyState === client.OPEN) {
+                client.send(data)
+            }
+        }
     })
 
     socket.on("close", () => {
@@ -18,4 +24,4 @@ wss.on("connection", (socket) => {
     })
 })
 
-console.log(`WSS is running on port:${PORT}`)
+console.log(`WSS is running on port:${SERVER_PORT}`)
