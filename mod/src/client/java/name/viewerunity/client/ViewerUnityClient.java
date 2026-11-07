@@ -3,8 +3,6 @@ package name.viewerunity.client;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
-import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +18,6 @@ public class ViewerUnityClient implements ClientModInitializer {
 		
 		// LevelExtractionEvents.END_EXTRACTION.register(this::extractWaypoint);
 		LevelRenderEvents.AFTER_TRANSLUCENT_TERRAIN.register(this::renderAndDrawWaypoint);
-
-		WebSocketClient wsc = new WebSocketClient();
-		wsc.connect("ws://localhost:8080");
 
 	}
 

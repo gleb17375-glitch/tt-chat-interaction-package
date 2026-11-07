@@ -19,6 +19,8 @@ public class ChatMessager {
             return;
         }
 
-        client.gui.hud.getChat().addClientSystemMessage(Component.literal(user + " | " + message).withStyle(color));
+        client.gui.hud.getChat()
+            .addClientSystemMessage(Component.literal(user + " | " + message)
+            .withStyle(color));
     }
 }

@@ -1,4 +1,4 @@
-package name.viewerunity.client;
+package name.viewerunity;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -10,19 +10,20 @@ import java.util.concurrent.CompletionStage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import tools.jackson.databind.ObjectMapper;
 
 public class WebSocketClient implements WebSocket.Listener {
     public static final String MOD_ID = "viewerunity";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     private WebSocket webSocket;
+    private ObjectMapper mapper;
 
     public void connect(String url) {
+        this.mapper = new ObjectMapper();
+
         HttpClient.newHttpClient()
             .newWebSocketBuilder()
             .buildAsync(URI.create(url), this)
@@ -43,24 +44,19 @@ public class WebSocketClient implements WebSocket.Listener {
 
         LOGGER.info("WebSocket client recived: " + json + " string");
 
-        ObjectMapper mapper = new ObjectMapper(null);
+        Message msg = this.mapper.readValue(json, Message.class);
+        LOGGER.info("WebSocket client recived: " + msg.type() + " field");
+        LOGGER.info("WebSocket client recived: " + msg.user() + " field");
+        LOGGER.info("WebSocket client recived: " + msg.content() + " field");
 
-        Message msg;
-        try {
-            msg = mapper.readValue(json, Message.class);
-            LOGGER.info("WebSocket client recived: " + msg.type() + " field");
-            LOGGER.info("WebSocket client recived: " + msg.user() + " field");
-            LOGGER.info("WebSocket client recived: " + msg.content() + " field");
-
-            if(msg.type().contains("chat")) {
-                LOGGER.info("INNNN!!!!");
-                Minecraft.getInstance().execute(() -> {
-                    ChatMessager.send(msg.user(), msg.content(), ChatFormatting.BLUE);
-                });
-            }
-        } catch (JsonProcessingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        if(msg.type().contains("chat")) {
+            // Minecraft.getInstance().execute(() -> {
+            //     ChatMessager.send(msg.user(), msg.content(), ChatFormatting.BLUE);
+            // });
+            ViewerUnity.serverInstance.execute(() -> {
+                ViewerUnity.serverInstance.getPlayerList().broadcastSystemMessage(Component.literal(msg.user() + " | " + msg.content())
+            .withStyle(ChatFormatting.BLUE), false);
+            });
         }
 
 
