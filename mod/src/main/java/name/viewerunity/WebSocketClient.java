@@ -11,9 +11,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import tools.jackson.databind.ObjectMapper;
 
 public class WebSocketClient implements WebSocket.Listener {
@@ -73,6 +83,45 @@ public class WebSocketClient implements WebSocket.Listener {
                 ViewerUnity.serverInstance.getPlayerList().getPlayers().stream().findAny().ifPresent(
                     player -> {
                         player.addEffect(regen);
+                    }
+                );
+            });
+        }
+
+        if(msg.type().contains("follow")) {
+            ViewerUnity.serverInstance.execute(() -> {
+                ViewerUnity.serverInstance.getPlayerList().getPlayers().stream().findAny().ifPresent(
+                    player -> {
+                        ServerLevel level = player.level();
+                        BlockPos spawnPos = BlockPos.containing(player.getX() + 1, player.getY(), player.getZ());
+
+                        Villager villager = EntityTypes.VILLAGER.spawn(level, spawnPos, EntitySpawnReason.COMMAND);
+
+                        if (villager != null) {
+                            villager.setCustomName(Component.literal(msg.user()));
+                            villager.setCustomNameVisible(true);
+                        }
+                    }
+                );
+            });
+        }
+
+        if(msg.type().contains("gift")) {
+            ViewerUnity.serverInstance.execute(() -> {
+                ViewerUnity.serverInstance.getPlayerList().getPlayers().stream().findAny().ifPresent(
+                    player -> {
+                        // if (msg.content().contains("7934")) {
+                        //     ItemStack goldenApple = new ItemStack(Items.GOLDEN_APPLE);
+                        //     boolean putedIn = player.getInventory().add(goldenApple);
+                        //     if (!putedIn) player.drop(goldenApple, false, null);
+                        //     player.sendSystemMessage(Component.literal("§d+ 🌹 HEART ME!"));
+                        //     return;
+                        // } 
+                        ItemStack rose = new ItemStack(Items.POPPY);
+                        rose.set(DataComponents.CUSTOM_NAME, Component.literal(msg.user()));
+                        boolean putedIn = player.getInventory().add(rose);
+                        if (!putedIn) player.drop(rose, false, null);
+                        player.sendSystemMessage(Component.literal("§d+ 🌹 Rose!"));
                     }
                 );
             });
