@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import tools.jackson.databind.ObjectMapper;
 
 public class WebSocketClient implements WebSocket.Listener {
@@ -38,6 +40,8 @@ public class WebSocketClient implements WebSocket.Listener {
 
     @Override
     public CompletionStage<?> onBinary(WebSocket webSocket, ByteBuffer data, boolean last) {
+        if (ViewerUnity.serverInstance == null) return null;
+
         LOGGER.info("WebSocket client recived: " + data.remaining() + " bytes");
 
         String json = StandardCharsets.UTF_8.decode(data).toString();
@@ -50,12 +54,27 @@ public class WebSocketClient implements WebSocket.Listener {
         LOGGER.info("WebSocket client recived: " + msg.content() + " field");
 
         if(msg.type().contains("chat")) {
-            // Minecraft.getInstance().execute(() -> {
-            //     ChatMessager.send(msg.user(), msg.content(), ChatFormatting.BLUE);
-            // });
             ViewerUnity.serverInstance.execute(() -> {
                 ViewerUnity.serverInstance.getPlayerList().broadcastSystemMessage(Component.literal(msg.user() + " | " + msg.content())
             .withStyle(ChatFormatting.BLUE), false);
+            });
+        }
+
+        if(msg.type().contains("like")) {
+            MobEffectInstance regen = new MobEffectInstance(
+                    MobEffects.REGENERATION, 
+                    5 * 20, 
+                    1, 
+                    false, 
+                    true, 
+                    true);
+
+            ViewerUnity.serverInstance.execute(() -> {
+                ViewerUnity.serverInstance.getPlayerList().getPlayers().stream().findAny().ifPresent(
+                    player -> {
+                        player.addEffect(regen);
+                    }
+                );
             });
         }
 
