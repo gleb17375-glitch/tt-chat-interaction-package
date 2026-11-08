@@ -5,6 +5,9 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +20,21 @@ public class ViewerUnity implements ModInitializer {
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	public static MinecraftServer serverInstance = null;
+	public static WebSocketClient wsc = null;
+
+	// Храним время последнего срабатывания для каждого типа события
+    private static final Map<String, Long> cooldowns = new ConcurrentHashMap<>();
+    private static final long COOLDOWN_MS = 5_000; // 5 секунд
+
+    public static boolean isOnCooldown(String key) {
+        long now = System.currentTimeMillis();
+        Long last = cooldowns.get(key);
+        if (last != null && now - last < COOLDOWN_MS) {
+            return true; // ещё на кулдауне
+        }
+        cooldowns.put(key, now); // обновляем время
+        return false;
+    }
 
 	@Override
 	public void onInitialize() {
@@ -28,14 +46,13 @@ public class ViewerUnity implements ModInitializer {
 
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
                 serverInstance = server;
+				wsc = new WebSocketClient();
+				wsc.connect("ws://localhost:8080");
         });
 
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			serverInstance = null;
 		});
-
-		WebSocketClient wsc = new WebSocketClient();
-		wsc.connect("ws://localhost:8080");
 	}
 
 	public static Identifier id(String path) {
