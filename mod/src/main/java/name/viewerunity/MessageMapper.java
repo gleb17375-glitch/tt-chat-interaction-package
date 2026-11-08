@@ -19,16 +19,13 @@ public class MessageMapper {
 
     public Message mapData(ByteBuffer data) {
         LOGGER.info("WebSocket client recived: " + data.remaining() + " bytes");
-
-        String json = StandardCharsets.UTF_8.decode(data).toString();
-
-        LOGGER.info("WebSocket client recived: " + json + " string");
-
-        Message msg = this.mapper.readValue(json, Message.class);
-        LOGGER.info("WebSocket client recived: " + msg.type() + " field");
-        LOGGER.info("WebSocket client recived: " + msg.user() + " field");
-        LOGGER.info("WebSocket client recived: " + msg.content() + " field");
-
-        return msg;
+        try {
+            String json = StandardCharsets.UTF_8.decode(data).toString();
+            Message msg = this.mapper.readValue(json, Message.class);
+            return msg;
+        } catch (Exception e) {
+            
+        }
+        return null;
     }
 }
