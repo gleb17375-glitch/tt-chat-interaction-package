@@ -23,6 +23,8 @@ public class ChatEventHandler {
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     public static final void HandleEvent(Message msg) {
+        if(msg == null) return;
+
         try {
         if(msg.type().contains("chat") &&  msg.content().contains("бебебе!")) {
             ViewerUnity.serverInstance.execute(() -> {
@@ -48,6 +50,31 @@ public class ChatEventHandler {
             });
         }
 
+        if(msg.type().contains("chat") &&  msg.content().contains("клутой!")) {
+            ViewerUnity.serverInstance.execute(() -> {
+                ViewerUnity.serverInstance.getPlayerList().getPlayers().stream().findAny().ifPresent(
+                    player -> {
+                        // change to spawn creaper
+                        // + add to spawn 
+                        ServerLevel level = player.level();
+                        BlockPos spawnPos = BlockPos.containing(player.getX() + 1, player.getY(), player.getZ());
+                        
+                        PrimedTnt tnt = new PrimedTnt(level, spawnPos.getX(), spawnPos.getY(), spawnPos.getZ(), player);
+
+                        tnt.setFuse(80);
+
+                        level.addFreshEntity(tnt);
+
+                        player.sendSystemMessage(Component.literal("§d+ клутой!"));
+
+                    }
+                );
+            //     ViewerUnity.serverInstance.getPlayerList().broadcastSystemMessage(Component.literal(formatTo8(msg.user()) + "| " + msg.content())
+            // .withStyle(ChatFormatting.BLUE), false);
+            });
+        }
+    
+
         if(msg.type().contains("like")) {
             // if (ViewerUnity.isOnCooldown("regen_event_cooldown")) return null;
             ViewerUnity.serverInstance.execute(() -> {
@@ -64,7 +91,7 @@ public class ChatEventHandler {
             });
         }
 
-        if(msg.type().contains("follow")) {
+        if(msg.type().contains("OFF__follow")) {
             ViewerUnity.serverInstance.execute(() -> {
                 ViewerUnity.serverInstance.getPlayerList().getPlayers().stream().findAny().ifPresent(
                     player -> {
