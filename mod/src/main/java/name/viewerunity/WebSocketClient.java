@@ -42,9 +42,23 @@ public class WebSocketClient implements WebSocket.Listener {
 
     @Override
     public CompletionStage<?> onBinary(WebSocket webSocket, ByteBuffer data, boolean last) {
-        if (ViewerUnity.serverInstance == null) return null;
+        if (ViewerUnity.serverInstance == null) {
+            webSocket.request(1);
+            return null;
+        }
         
         Message msg = this.mapper.mapData(data);
+
+        if (
+            !msg.type().contains("chat") 
+            && !msg.type().contains("like") 
+            && !msg.type().contains("gift") 
+            && !msg.type().contains("follow")
+            && !msg.type().contains("share")
+        ) {
+            webSocket.request(1);
+            return null;
+        }
 
         ChatEventHandler.HandleEvent(msg);
 
