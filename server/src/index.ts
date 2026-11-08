@@ -10,13 +10,13 @@ wss.on("connection", (socket) => {
     console.log("client connected");
 
     socket.on("message", (data) => {
-        // console.log("server recived: ", data.toString());
+        console.log("server recived: ", data.toString());
 
-        for (const client of wss.clients) {
-            if (client.readyState === client.OPEN) {
-                client.send(data)
-            }
+        wss.clients.forEach((client) => {
+        if (client !== socket && client.readyState === WebSocket.OPEN) {
+            client.send(data)
         }
+    })
     })
 
     socket.on("close", () => {
