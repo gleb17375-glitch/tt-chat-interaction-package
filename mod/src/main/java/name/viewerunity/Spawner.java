@@ -1,5 +1,11 @@
 package name.viewerunity;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
@@ -8,6 +14,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.NeutralMob;
@@ -19,10 +26,22 @@ import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
+
 public class Spawner {
-    public static final void spawnTnt(ServerPlayer player) {
+    public static final String MOD_ID = "viewerunity";
+	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+    public final int PLAYER_PARTY_SIZE = 2;
+    public final int ARENA_CAPCITY = 100;
+
+    public final void spawnTnt(ServerPlayer player) {
         ServerLevel level = player.level();
         BlockPos spawnPos = BlockPos.containing(player.getX() + 1, player.getY(), player.getZ());
                         
@@ -33,7 +52,7 @@ public class Spawner {
         level.addFreshEntity(tnt);
     }
 
-    public static final void spawnCreeper(ServerPlayer player) {
+    public final void spawnCreeper(ServerPlayer player) {
         if (player == null) return;
         ServerLevel level = player.level();
         BlockPos spawnPos = BlockPos.containing(player.getX() + 1, player.getY(), player.getZ());
@@ -51,7 +70,7 @@ public class Spawner {
         }
     }
 
-    public static final void spawnFireball(ServerPlayer player) {
+    public final void spawnFireball(ServerPlayer player) {
         if (player == null) return;
         ServerLevel level = player.level();
         BlockPos spawnPos = BlockPos.containing(player.getX(), player.getY() + 1, player.getZ());
@@ -74,7 +93,7 @@ public class Spawner {
         }
     }
 
-    public static final void spawnFireball(ServerPlayer player, Entity owner) {
+    public final void spawnFireball(ServerPlayer player, Entity owner) {
         if (player == null) return;
         ServerLevel level = player.level();
         BlockPos spawnPos = BlockPos.containing(owner.getX(), owner.getY() + 1, owner.getZ());
@@ -97,9 +116,20 @@ public class Spawner {
         }
     }
 
-    public static final void spawnGolem(ServerPlayer player, MutableComponent name) {
+    public final void spawnGolem(ServerPlayer player, MutableComponent name) {
         ServerLevel level = player.level();
-        BlockPos spawnPos = BlockPos.containing(player.getX() + 1, player.getY(), player.getZ());
+        Vec3 lookDirection = player.getLookAngle();
+        BlockPos spawnPos = BlockPos.containing(player.getX() + lookDirection.x()*5, player.getY(), player.getZ() + lookDirection.z()*5);
+
+         AABB searchArea = new AABB(
+            player.getX() - 32, -64,  player.getZ() - 32,
+            player.getX() + 32,  320, player.getZ() + 32
+        );
+
+        // 2. Ищем големов только в этой области
+        List<IronGolem> golems = player.level().getEntitiesOfClass(IronGolem.class, searchArea);
+
+        if (golems.size() >= PLAYER_PARTY_SIZE) return;
 
         IronGolem ironGolem = EntityTypes.IRON_GOLEM.spawn(level, spawnPos, EntitySpawnReason.COMMAND);
 
@@ -109,7 +139,7 @@ public class Spawner {
         }
     }
 
-    public static final void spawnVillager(ServerPlayer player, MutableComponent name) {
+    public final void spawnVillager(ServerPlayer player, MutableComponent name) {
         ServerLevel level = player.level();
         BlockPos spawnPos = BlockPos.containing(player.getX() + 1, player.getY(), player.getZ());
 
@@ -121,9 +151,22 @@ public class Spawner {
         }
     }
 
-    public static final void spawnZombie(ServerPlayer player, MutableComponent name) {
+    public final void spawnZombie(ServerPlayer player, MutableComponent name) {
         ServerLevel level = player.level();
-        BlockPos spawnPos = BlockPos.containing(player.getX() + 1, player.getY(), player.getZ());
+        Vec3 lookDirection = player.getLookAngle();
+        BlockPos spawnPos = BlockPos.containing(player.getX() + lookDirection.x()*(-5), player.getY(), player.getZ() + lookDirection.z()*(-5));
+
+        AABB searchArea = new AABB(
+            player.getX() - 32, -64,  player.getZ() - 32,
+            player.getX() + 32,  320, player.getZ() + 32
+        );
+
+        // 2. Ищем големов только в этой области
+        List<Zombie> zombies = player.level().getEntitiesOfClass(Zombie.class, searchArea);
+        
+        LOGGER.error(String.valueOf(zombies.size()));
+
+        if (zombies.size() > ARENA_CAPCITY) return;
 
         Zombie zombie = EntityTypes.ZOMBIE.spawn(level, spawnPos, EntitySpawnReason.COMMAND);
 
@@ -133,7 +176,7 @@ public class Spawner {
         }
     }
 
-    public static final void spawnRose(ServerPlayer player, MutableComponent name) {
+    public final void spawnRose(ServerPlayer player, MutableComponent name) {
                         // if (msg.content().contains("7934")) {
                         //     ItemStack goldenApple = new ItemStack(Items.GOLDEN_APPLE);
                         //     boolean putedIn = player.getInventory().add(goldenApple);
@@ -147,6 +190,40 @@ public class Spawner {
         if (!putedIn) player.drop(rose, false, null);
         player.sendSystemMessage(Component.literal("§d+ 🌹 Rose!"));   
     }
+
+   public final void killZombie(ServerPlayer player, MutableComponent name, int amount) {
+        ServerLevel level = player.level();
+
+        AABB searchArea = new AABB(
+            player.getX() - 32, -64,  player.getZ() - 32,
+            player.getX() + 32,  320, player.getZ() + 32
+        );
+
+        // 2. Ищем големов только в этой области
+        List<Zombie> zombies = player.level().getEntitiesOfClass(Zombie.class, searchArea);
+
+        int amountTreshhold = (zombies.size() < amount) ? zombies.size() : amount;
+        for(int i = 0; i < amountTreshhold; i++) {
+            zombies.get(i).kill(level);
+        }
+    }
+    
+    public final void killGolem(ServerPlayer player, MutableComponent name, int amount) {
+        ServerLevel level = player.level();
+
+        AABB searchArea = new AABB(
+            player.getX() - 32, -64,  player.getZ() - 32,
+            player.getX() + 32,  320, player.getZ() + 32
+        );
+
+        // 2. Ищем големов только в этой области
+        List<IronGolem> golems = player.level().getEntitiesOfClass(IronGolem.class, searchArea);
+
+        int amountTreshhold = (golems.size() < amount) ? golems.size() : amount;
+        for(int i = 0; i < amountTreshhold; i++) {
+            golems.get(i).kill(level);
+        }
+    }
+    
+
 }
-    
-    

@@ -16,9 +16,11 @@ public class WebSocketClient implements WebSocket.Listener {
 
     private WebSocket webSocket;
     private MessageMapper mapper;
+    private ChatEventHandler eventHandler;
 
     public void connect(String url) {
         this.mapper = new MessageMapper();
+        this.eventHandler = new ChatEventHandler();
 
         HttpClient.newHttpClient()
             .newWebSocketBuilder()
@@ -37,7 +39,6 @@ public class WebSocketClient implements WebSocket.Listener {
         // TODO Auto-generated method stub
         Listener.super.onError(webSocket, error);
         LOGGER.error("WebSocket error" + error);
-        this.connect("ws://localhost:8080");
     }
 
     @Override
@@ -48,6 +49,10 @@ public class WebSocketClient implements WebSocket.Listener {
         }
         
         Message msg = this.mapper.mapData(data);
+        if(msg == null) {
+            webSocket.request(1);
+            return null;
+        }
 
         if (
             !msg.type().contains("chat") 
@@ -59,8 +64,7 @@ public class WebSocketClient implements WebSocket.Listener {
             webSocket.request(1);
             return null;
         }
-
-        ChatEventHandler.HandleEvent(msg);
+        this.eventHandler.HandleEvent(msg);
 
         webSocket.request(1);
         return null;
