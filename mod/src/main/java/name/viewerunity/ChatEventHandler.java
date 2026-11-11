@@ -42,36 +42,36 @@ public class ChatEventHandler {
         return rand.nextInt(100) <= percent;
     }
 
-    public void HandleEvent(Message msg, String player_team_word, String enemy_team_word, String add_word, String remove_word) {
+    public void HandleEvent(Message msg, int wordCount, boolean isFriend) {
         if (msg == null)
             return;
-        // LOGGER.error("HANDLE_EVENT___ " + player_team_word + enemy_team_word + add_word + remove_word);
-    
+        LOGGER.error("HANDLE_EVENT___ " + msg + " " + wordCount + " " + isFriend);
+
         try {
-            if (msg.content().contains(player_team_word)) {
-                if (msg.content().contains(add_word)) {
+            if (wordCount >= 3) {
+                if (isFriend) {
                     ViewerUnity.serverInstance.execute(() -> {
                         ViewerUnity.serverInstance.getPlayerList().getPlayers().stream().findAny().ifPresent(
                                 player -> {
                                     this.spawner.spawnGolem(player, Component.literal(msg.user()));
                                     this.spawner.spawnGolem(player, Component.literal(msg.user()));
+
+                                    this.spawner.killZombie(player, Component.literal(msg.user()), 5);
                                 });
                     });
                 }
-                if (msg.content().contains(remove_word)) {
+                if (!isFriend) {
                     ViewerUnity.serverInstance.execute(() -> {
                         ViewerUnity.serverInstance.getPlayerList().getPlayers().stream().findAny().ifPresent(
                                 player -> {
-                                    this.spawner.killGolem(player, Component.literal(msg.user()), 1);
                                 });
                     });
-                }
-            } else if (msg.content().contains(enemy_team_word)) {
-                if (msg.content().contains(add_word)) {
                     ViewerUnity.serverInstance.execute(() -> {
                         ViewerUnity.serverInstance.getPlayerList().getPlayers().stream().findAny().ifPresent(
                                 player -> {
-                                    if (player == null)
+
+                                // this.spawner.killGolem(player, Component.literal(msg.user()), 1);
+                                 if (player == null)
                                         return;
                                     this.spawner.spawnZombie(player, Component.literal(msg.user()));
                                     this.spawner.spawnZombie(player, Component.literal(msg.user()));
@@ -89,14 +89,7 @@ public class ChatEventHandler {
                                 });
                     });
                 }
-                if (msg.content().contains(remove_word)) {
-                    ViewerUnity.serverInstance.execute(() -> {
-                        ViewerUnity.serverInstance.getPlayerList().getPlayers().stream().findAny().ifPresent(
-                                player -> {
-                                    this.spawner.killZombie(player, Component.literal(msg.user()), 5);
-                                });
-                    });
-                }
+
             }
 
             // if(msg.type().contains("chat") && msg.content().contains("бебебе!")) {
